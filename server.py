@@ -3,42 +3,71 @@ from threading import Thread
 from SocketServer import ThreadingMixIn
 import select
  
-TCP_IP = '10.8.120.165'
+TCP_IP = '127.0.0.1'
 TCP_PORT = int(raw_input("Enter your port: "))
 BUFFER_SIZE = 1024
 tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 tcpsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 tcpsock.bind((TCP_IP, TCP_PORT))
-tcpsock.listen(3)
-(conn1, (ip,port)) = tcpsock.accept()
-(conn2, (ip,port)) = tcpsock.accept()
-conn1me = []
-conn2me = []
-rwe = [conn1,conn2]
-lenconn1 = 0
-lenconn2 = 0
+rwe = []
+clients = {}
+total_mssg_list = []
+len_mssg_list = 0
+clientthreads = []
 
-def StartSend(conn,mssglst):
-	conn.send(mssglst[len(mssglst)-1][5:])
-
-def StartRecv(conn):
-	data = conn.recv(1024)
-	print data
-	if data[:5] == "conn1":
-		conn1me.append(data)
-	if data[:5] == "conn2":
-		conn2me.append(data)
-
-while True:
-	r,w,e = select.select(rwe,[],[])
-	StartRecv(r[0])
-	print conn1me
-	print conn2me
-	# StartSend(conn1, conn1me)
-	if len(conn1me) > lenconn1:
-		StartSend(conn2,conn1me)
-		lenconn1 = len(conn1me)
-	elif len(conn2me) > lenconn2:
-		StartSend(conn1,conn2me)
-		lenconn2 = len(conn2me)
+class Client(object):
+	"""docstring for Client"""
+	def __init__(self, name_s,name_t,socket_s):
+		self.name_s = name_s
+		self.name_t = name_t
+		self.sock = socket_s
+		self.messages = []
 	
+	def recvfrom(self):
+		while True:
+			data = self.sock.recv(1024)
+			if data:
+				total_mssg_list.append(data)
+				self.messages.append(data)
+				try:
+					clients[self.name_t].send(data)
+				except:
+					print "The requested user not found"
+					continue
+				print data
+
+
+def acceptor():
+	while True:
+		tcpsock.listen(20)
+		(conn , (ip,port)) = tcpsock.accept()
+		rwe.append(conn)
+		conn.send("Who to connect with?")
+		name = conn.recv(1024)
+		newclient = Client(name[:name.find('-')],name[name.find('-')+1:],conn)
+		newthread = Thread(target= newclient.recvfrom)
+		clients[newclient.name_s] = newclient.sock
+		clientthreads.append(newthread)
+		newthread.start()
+		print rwe
+
+def StartSend(mssglst, conn=tcpsock):
+	mssg = total_mssg_list[len(total_mssg_list)-1]
+	addr_recv = mssg[:mssg.find('-')]
+	# addr = ""
+	# conn.send(addr_recv)
+
+def runfunc():
+	global len_mssg_list
+	while True:
+		if len(total_mssg_list) > len_mssg_list:
+			StartSend(total_mssg_list)
+			len_mssg_list = len(total_mssg_list)
+
+		
+threa1 = Thread(target= acceptor)
+threa2 = Thread(target= runfunc)
+
+
+threa1.start()
+threa2.start()

@@ -24,12 +24,14 @@ class Client:
 
 	def addnewclient(self):
 		while True:
-			b = raw_input()
-			if b == "menu":
+			control_input = raw_input()
+			menu_select = ""
+			if control_input == "menu":
 				print "|add new client|change my name|"
-			c = raw_input()
-			if c == "add new client":
-				
+				menu_select += raw_input()
+			if menu_select == "add new client":
+				new_client = int(raw_input("enter port to connect to: "))
+				self.socket1.connect((self.connect_host,new_client))
 
 port1 = int(raw_input("enter port to connect to: "))
 urname = raw_input("enter your name")
@@ -37,7 +39,8 @@ client = Client("127.0.0.1",port1,urname)
 
 threa1 = Thread(target = client.sendmssg)
 threa2 = Thread(target = client.recievemssg)
+threa3 = Thread(target = Client.addnewclient)
 
 threa1.start()
 threa2.start()
-	
+threa3.start()	

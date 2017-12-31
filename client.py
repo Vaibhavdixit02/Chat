@@ -1,6 +1,7 @@
 import socket
 from threading import Thread
 
+
 class Client:
 	"""docstring for Client"""
 	def __init__(self,connect_host,connect_port,urname):
@@ -9,7 +10,6 @@ class Client:
 		self.socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.socket1.connect((self.connect_host,self.connect_port))
 		self.name = urname
-		self.socket1.send(self.name +'-'+raw_input())
 	
 	def sendmssg(self):
 		while True:
@@ -22,6 +22,14 @@ class Client:
 			if mssg:
 				print "recieved: " + mssg
 
+	def addnewclient(self):
+		while True:
+			b = raw_input()
+			if b == "menu":
+				print "|add new client|change my name|"
+			c = raw_input()
+			if c == "add new client":
+				
 
 port1 = int(raw_input("enter port to connect to: "))
 urname = raw_input("enter your name")

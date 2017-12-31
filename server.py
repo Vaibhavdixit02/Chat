@@ -45,6 +45,8 @@ def acceptor():
 		conn.send("Who to connect with?")
 		name = conn.recv(1024)
 		newclient = Client(name[:name.find('-')],name[name.find('-')+1:],conn)
+		for i in rwe[:len(rwe)-1]:
+			i.send(name + " joined the server")
 		newthread = Thread(target= newclient.recvfrom)
 		clients[newclient.name_s] = newclient.sock
 		clientthreads.append(newthread)
@@ -63,6 +65,10 @@ def runfunc():
 		if len(total_mssg_list) > len_mssg_list:
 			StartSend(total_mssg_list)
 			len_mssg_list = len(total_mssg_list)
+
+def CheckRequestforChange(message):
+	if message[message.find('-'): message.find('-')+2] == '1':
+		
 
 		
 threa1 = Thread(target= acceptor)
